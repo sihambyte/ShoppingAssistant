@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+# Secrets and configs
+.env
+*.env
+config/.env
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+
+# Project specific
+data/
+docker-compose.yaml
+experiment_plots/
+tiledb_indexes/
