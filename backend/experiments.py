@@ -338,12 +338,39 @@ class ExperimentRunner:
             "raw_latencies": latencies
         }
 
-    def run_retrieval_experiment(self, questions: List[str], num_runs: int = 25, threshold: float = 3):
+    def run_retrieval_experiment(self, questions: List[str], data_path: str, num_runs: int = 25, threshold: float = 3):
         """
         Experiment 3: Dedicated retrieval performance experiment.
-        Tests multiple questions while keeping other factors constant.
         """
         logger.info("Starting retrieval experiment...")
+        
+        # First index some data
+        texts_dict, metadata_dict = self.preprocessor.preprocess(data_path)
+        first_doc_id = list(texts_dict.keys())[0]
+        
+        # Generate embeddings - use the correct method name
+        embeddings_dict = {}
+        embeddings_dict, _ = self.embedding_generator.generate_embeddings_multiple_datasets(
+            {first_doc_id: texts_dict[first_doc_id]}  # Pass as dict with single document
+        )
+        
+        # Index the data
+        self.tiledb_store.index_embeddings(
+            embeddings_dict,
+            texts_dict,
+            metadata_dict
+        )
+        
+        # Set TileDB's embedding model
+        model_map = {
+            384: "all-MiniLM-L6-v2",
+            768: "all-distilroberta-v1",
+            1024: "all-roberta-large-v1",
+            1536: "text-embedding-ada-002"
+        }
+        self.tiledb_store.embedding_model = EmbeddingModelWrapper(model_map[self.fixed_dimension])
+        
+        # Now run retrieval tests
         retrieval_results = self.measure_retrieval_times(
             single_question=False, 
             questions=questions, 
@@ -444,7 +471,10 @@ def main():
         input("Please run 'docker compose up -d' and press Enter when containers are ready...")
         logger.info("Starting retrieval experiment...")
         
-        retrieval_results = runner.run_retrieval_experiment(runner.questions)
+        retrieval_results = runner.run_retrieval_experiment(
+            questions=runner.questions,
+            data_path=str(data_path)
+        )
         results["retrieval"] = retrieval_results
         plotter.plot_retrieval_comparison(retrieval_results)
         

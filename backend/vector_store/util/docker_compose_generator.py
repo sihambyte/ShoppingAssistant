@@ -36,7 +36,6 @@ def generate_docker_compose(dimensions: List[int], base_port: int = 5080) -> str
         }
     
     docker_compose = {
-        "version": "3",
         "services": services
     }
     

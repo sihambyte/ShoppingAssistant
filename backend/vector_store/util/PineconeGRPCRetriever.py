@@ -1,5 +1,8 @@
 from langchain.schema import BaseRetriever, Document
 from typing import List, Callable, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class PineconeGRPCRetriever(BaseRetriever):
@@ -17,7 +20,10 @@ class PineconeGRPCRetriever(BaseRetriever):
         object.__setattr__(self, "metadata", metadata or {})
 
     def _get_relevant_documents(self, query: str) -> List[Document]:
+        """Get relevant documents for a query."""
         query_embedding = self.embedding_model(query)
+        logger.info(f"PineconeGRPCRetriever - Query embedding dimension: {len(query_embedding)}")
+        
         response = self.grpc_index.query(
             vector=query_embedding,
             top_k=5,

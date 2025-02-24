@@ -90,6 +90,7 @@ class PineconeStore(BaseVectorStore, ABC):
         **kwargs
     ) -> tuple[str, float]:
         """Single retrieval with timing."""
+        
         if llm is None:
             llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 

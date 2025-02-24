@@ -29,6 +29,7 @@ class ExperimentPlotter:
         """Plot dimension experiment metrics in separate plots."""
         dimensions = sorted(list(results["embedding"].keys()))
         
+        logger.info("Plotting embedding times vs dimensions...")
         # Plot 1: Embedding times
         plt.figure(figsize=(12, 6))
         plt.plot(dimensions, 
@@ -43,6 +44,7 @@ class ExperimentPlotter:
             plt.savefig(f"{self.output_dir}/dimension_embedding.png")
         plt.show()
         
+        logger.info("Plotting indexing times vs dimensions...")
         # Plot 2: Indexing times
         plt.figure(figsize=(12, 6))
         plt.plot(dimensions, 
@@ -60,6 +62,7 @@ class ExperimentPlotter:
             plt.savefig(f"{self.output_dir}/dimension_indexing.png")
         plt.show()
         
+        logger.info("Plotting retrieval times vs dimensions...")
         # Plot 3: Retrieval times
         plt.figure(figsize=(12, 6))
         plt.plot(dimensions,
@@ -115,34 +118,31 @@ class ExperimentPlotter:
         plt.show()
 
     def plot_retrieval_comparison(self, results: Dict):
-        """Plot retrieval performance comparison across questions."""
+        """Plot retrieval performance comparison across questions as lines."""
         questions = list(results["pinecone"].keys())
         
-        # Get times for each store
-        pinecone_times = [results["pinecone"][q] for q in questions]
-        tiledb_times = [results["tiledb"][q] for q in questions]
-        
         plt.figure(figsize=(12, 6))
-        x = range(len(questions))
         
-        # Plot bars
-        plt.bar([i - 0.2 for i in x], pinecone_times, 0.4, 
-                label="Pinecone", color=self.colors["pinecone"])
-        plt.bar([i + 0.2 for i in x], tiledb_times, 0.4, 
-                label="TileDB", color=self.colors["tiledb"])
+        # Plot lines instead of bars
+        plt.plot(range(len(questions)), 
+                [results["pinecone"][q] for q in questions],
+                label="Pinecone", marker='o', color=self.colors["pinecone"])
+        plt.plot(range(len(questions)), 
+                [results["tiledb"][q] for q in questions],
+                label="TileDB", marker='s', color=self.colors["tiledb"])
         
         plt.xlabel("Questions")
         plt.ylabel("Retrieval Time (seconds)")
         plt.title("Retrieval Performance Comparison")
-        plt.xticks(x, [f"Q{i+1}" for i in x], rotation=45)
+        plt.xticks(range(len(questions)), [f"Q{i+1}" for i in range(len(questions))], rotation=45)
         plt.legend()
         plt.grid(True)
         
-        # Add value labels on bars
-        for i, v in enumerate(pinecone_times):
-            plt.text(i - 0.2, v, f'{v:.2f}s', ha='center', va='bottom')
-        for i, v in enumerate(tiledb_times):
-            plt.text(i + 0.2, v, f'{v:.2f}s', ha='center', va='bottom')
+        # Add value labels above points
+        for i, v in enumerate([results["pinecone"][q] for q in questions]):
+            plt.text(i, v, f'{v:.2f}s', ha='center', va='bottom')
+        for i, v in enumerate([results["tiledb"][q] for q in questions]):
+            plt.text(i, v, f'{v:.2f}s', ha='center', va='bottom')
         
         plt.tight_layout()
         
